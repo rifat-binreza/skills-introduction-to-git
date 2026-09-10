@@ -111,14 +111,16 @@ def split(
 
 
 def from_besstie_long(frame: pd.DataFrame) -> pd.DataFrame:
-    """Convert the public long-format BESSTIE snapshot to the task schema.
+    """Convert a stacked (long-format) BESSTIE export into the task schema.
 
-    The Hugging Face snapshot of `BESSTIE`_ stores one row per ``(text, task)``
-    with columns ``text``, ``label``, ``variety``, ``source`` and ``task``.
+    Some BESSTIE exports store one row per ``(text, task)`` with a single
+    ``label`` column and a ``task`` discriminator (``sentiment``/``sarcasm``).
     This pivots it into one row per text with ``sentiment`` and ``sarcasm``
     columns, keeping ``variety`` and ``source`` when present.
 
-    .. _BESSTIE: https://huggingface.co/datasets/unswnlporg/BESSTIE
+    The default public Hugging Face snapshot is already wide-format
+    (``source``, ``variety``, ``text``, ``sentiment``, ``sarcasm``) and does not
+    need conversion.
     """
     required = {"text", "label", "task"}
     missing = required - set(frame.columns)
@@ -139,8 +141,17 @@ def from_besstie_long(frame: pd.DataFrame) -> pd.DataFrame:
     return wide.reset_index(drop=True)
 
 
-def load_huggingface(name: str = "unswnlporg/BESSTIE", *, split: str = "train") -> pd.DataFrame:
-    """Load a dataset from the Hugging Face Hub (requires the ``hf`` extra)."""
+def load_huggingface(
+    name: str = "unswnlporg/BESSTIE",
+    *,
+    config: str = "en_AU",
+    split: str = "train",
+) -> pd.DataFrame:
+    """Load a BESSTIE subset from the Hugging Face Hub (requires the ``hf`` extra).
+
+    The public snapshot exposes one config per variety: ``en_AU``, ``en_IN`` and
+    ``en_UK``. Use ``config`` to select the variety of interest.
+    """
     try:
         from datasets import load_dataset
     except ImportError as exc:
@@ -148,4 +159,4 @@ def load_huggingface(name: str = "unswnlporg/BESSTIE", *, split: str = "train") 
             "Loading from the Hub requires the 'hf' extra: "
             "`pip install 'alta-shared-task-2026[hf]'`"
         ) from exc
-    return load_dataset(name, split=split).to_pandas()
+    return load_dataset(name, config, split=split).to_pandas()

@@ -3,6 +3,15 @@
 This guide covers setting up a development environment for the **ALTA Shared
 Task 2026** baseline.
 
+## Table of contents
+
+- [Prerequisites](#prerequisites)
+- [Setup options](#setup-options)
+- [Install pre-commit hooks](#install-the-pre-commit-hooks)
+- [Verify your environment](#verify-your-environment)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+
 ## Prerequisites
 
 - **Python 3.10+** (tested on 3.10–3.12)
@@ -12,7 +21,16 @@ Task 2026** baseline.
   [Dev Containers](https://code.visualstudio.com/docs/devcontainers/containers)
   extension.
 
-## Option A: `uv` (recommended)
+## Setup options
+
+| Option | Best for | Command |
+| --- | --- | --- |
+| **A — uv** | Fast, reproducible installs | `uv sync --extra dev` |
+| **B — pip + venv** | Vanilla Python setups | `pip install -e ".[dev]"` |
+| **C — Docker** | Isolated / CI parity | `docker build -t alta-shared-task-2026 .` |
+| **D — Devcontainer** | One-click VS Code / Codespaces | Reopen in container |
+
+### Option A: `uv` (recommended)
 
 `uv` manages the virtual environment and dependencies in one step.
 
@@ -28,7 +46,7 @@ uv run pytest              # run tests
 uv run alta2026 --help     # use the CLI
 ```
 
-## Option B: `pip` + venv
+### Option B: `pip` + venv
 
 ```bash
 git clone https://github.com/rifat-binreza/skills-introduction-to-git.git
@@ -44,7 +62,7 @@ pytest                             # run tests
 alta2026 --help                    # use the CLI
 ```
 
-## Option C: Docker
+### Option C: Docker
 
 ```bash
 git clone https://github.com/rifat-binreza/skills-introduction-to-git.git
@@ -54,7 +72,7 @@ docker build -t alta-shared-task-2026 .
 docker run --rm alta-shared-task-2026 --help
 ```
 
-## Option D: Devcontainer / Codespaces
+### Option D: Devcontainer / Codespaces
 
 1. Open the repository in VS Code.
 2. Install the Dev Containers extension and reopen in container
@@ -90,12 +108,16 @@ Individual targets:
 
 ## Troubleshooting
 
-**`alta2026: command not found`** — the package isn't installed. Re-run
-`pip install -e ".[dev]"` (or `uv sync --extra dev`) and make sure your virtual
-environment is active.
+| Problem | Solution |
+| --- | --- |
+| `alta2026: command not found` | Re-run `pip install -e ".[dev]"` (or `uv sync --extra dev`) and make sure your virtual environment is active. |
+| `ModuleNotFoundError: No module named 'datasets'` | Install the Hub extras: `pip install -e ".[hf]"`. |
+| Slow first `uv sync` | uv resolves and downloads packages once; subsequent runs are cached. |
 
-**`ModuleNotFoundError: No module named 'datasets'`** — the Hugging Face extras
-aren't installed. Run `pip install -e ".[hf]"`.
+## Resources
 
-**Slow first `uv sync`** — uv needs to resolve and download packages once;
-subsequent runs are cached.
+- [uv documentation](https://docs.astral.sh/uv/)
+- [Docker Get Started](https://docs.docker.com/get-started/)
+- [Dev Containers specification](https://containers.dev/)
+- [VS Code Dev Containers](https://code.visualstudio.com/docs/devcontainers/containers)
+- [ALTA 2026 Shared Task](https://www.alta.asn.au/events/sharedtask2026/)

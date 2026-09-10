@@ -3,6 +3,16 @@
 Thanks for helping improve the ALTA Shared Task 2026 baseline. Please read this
 guide before opening a pull request.
 
+## Table of contents
+
+- [Code of Conduct](#code-of-conduct)
+- [Ways to contribute](#ways-to-contribute)
+- [Contribution workflow](#contribution-workflow)
+- [Commit messages](#commit-messages)
+- [Pull requests](#pull-requests)
+- [Style guide](#style-guide)
+- [Resources](#resources)
+
 ## Code of Conduct
 
 All participants are expected to follow our
@@ -15,7 +25,19 @@ All participants are expected to follow our
 - Fix documentation, tooling or CI.
 - Add support for new data formats.
 
-## Getting started
+## Contribution workflow
+
+```mermaid
+flowchart LR
+    A["Fork & clone"] --> B["Create branch"]
+    B --> C["Make changes<br/>(+ tests)"]
+    C --> D["make format"]
+    D --> E["make lint"]
+    E --> F["make test"]
+    F --> G["Push & open PR"]
+    G --> H["CI (lint → test → build)"]
+    H --> I["Review & merge"]
+```
 
 1. **Fork** the repository and clone your fork.
 2. Create a branch from `main`:
@@ -27,7 +49,7 @@ All participants are expected to follow our
 3. Install the dev environment (see [SETUP.md](SETUP.md)).
 4. Make your changes, adding or updating tests as needed.
 
-## Development workflow
+### Local development commands
 
 ```bash
 make format     # auto-format and fix lint issues
@@ -50,8 +72,16 @@ Use [Conventional Commits](https://www.conventionalcommits.org/):
 <optional footer>
 ```
 
-Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`,
-`ci`, `chore`. Summaries should be imperative, lowercase and ≤ 72 characters.
+| Type | Purpose |
+| --- | --- |
+| `feat` | A new feature |
+| `fix` | A bug fix |
+| `docs` | Documentation changes |
+| `test` | Adding or updating tests |
+| `ci` | CI/CD configuration |
+| `chore` | Tooling and maintenance |
+
+Summaries should be imperative, lowercase and ≤ 72 characters.
 
 Example:
 
@@ -67,6 +97,7 @@ Closes #12
 - Reference related issues (`Fixes #123`).
 - Update documentation where behaviour changes.
 - Ensure `make check` passes before pushing.
+- Fill in the pull request template.
 
 ## Style guide
 
@@ -75,6 +106,13 @@ Closes #12
 - Prefer type hints and docstrings on public functions.
 - Keep the baseline simple and reproducible — the goal is a solid reference
   point, not unmaintainable cleverness.
+
+## Resources
+
+- [Conventional Commits](https://www.conventionalcommits.org/)
+- [PEP 8 — Style Guide for Python Code](https://peps.python.org/pep-0008/)
+- [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html)
+- [GitHub flow](https://docs.github.com/en/get-started/using-github/github-flow)
 
 ## Questions?
 

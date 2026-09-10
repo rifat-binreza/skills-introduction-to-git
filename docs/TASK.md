@@ -3,6 +3,20 @@
 This document summarises the 2026 ALTA Shared Task and how this repository
 supports it.
 
+## Table of contents
+
+- [What is the ALTA Shared Task?](#what-is-the-alta-shared-task)
+- [The 2026 task](#the-2026-task)
+- [The BESSTIE benchmark](#the-besstie-benchmark)
+- [Key dates](#key-dates)
+- [Data format](#data-format)
+- [Getting the data](#getting-the-data)
+- [System pipeline](#system-pipeline)
+- [Evaluation](#evaluation)
+- [Submitting results](#submitting-results)
+- [Resources](#resources)
+- [Citation](#citation)
+
 ## What is the ALTA Shared Task?
 
 The Australasian Language Technology Association (ALTA) runs an annual
@@ -30,7 +44,14 @@ Both sub-tasks are binary classification problems:
 | Sentiment | negative | positive |
 | Sarcasm | not sarcastic | sarcastic |
 
-### The BESSTIE benchmark
+```mermaid
+flowchart LR
+    IN["Input text<br/>(en-AU or en-UK)"] --> MODEL[Classifier]
+    MODEL --> SENT["Sentiment: 0 / 1"]
+    MODEL --> SARC["Sarcasm: 0 / 1"]
+```
+
+## The BESSTIE benchmark
 
 BESSTIE (Srirag et al., Findings of ACL 2025) is a manually annotated benchmark
 for sentiment and sarcasm classification across three varieties of English —
@@ -42,7 +63,30 @@ domains:
 
 The 2026 shared task uses the **en-AU** and **en-UK** subsets.
 
-### Key dates
+### Dataset at a glance
+
+| Variety | Rows (public snapshot) | Domains |
+| --- | --- | --- |
+| en-AU | 3.08k | GOOGLE, REDDIT |
+| en-IN | 3.79k | GOOGLE, REDDIT |
+| en-UK | 3.21k | GOOGLE, REDDIT |
+
+The public [Hugging Face snapshot](https://huggingface.co/datasets/unswnlporg/BESSTIE)
+provides one config per variety (`en_AU`, `en_IN`, `en_UK`), each split into
+`train` and `validation`. The official 2026 train/dev/test splits are released
+to registered teams.
+
+### Example annotations
+
+| Variety | Text | Sentiment | Sarcasm |
+| --- | --- | --- | --- |
+| en-AU | "This was one of the best dishes I've EVER had! … perfectly cooked." | 1 | 0 |
+| en-AU | "Ordered the 'avocado goodness' burger and this is how much avo was on it…" | 0 | 1 |
+| en-AU | "Staff don't seem to care anymore. The manager… doesn't have service skills at all." | 0 | 0 |
+| en-UK | "Traditional friendly pub. Excellent beer" | 1 | 0 |
+| en-UK | "What a brave potatriot" | 0 | 1 |
+
+## Key dates
 
 | Milestone | Date |
 | --- | --- |
@@ -56,7 +100,7 @@ The 2026 shared task uses the **en-AU** and **en-UK** subsets.
 
 ## Data format
 
-The expected tabular schema used by this repository:
+The tabular schema used by this repository:
 
 | Column | Type | Description |
 | --- | --- | --- |
@@ -66,11 +110,12 @@ The expected tabular schema used by this repository:
 | `variety` | string | `en-AU` or `en-UK` (optional). |
 | `source` | string | `GOOGLE` or `REDDIT` (optional). |
 
-> The public Hugging Face snapshot stores BESSTIE in a *long* format (one row
-> per `(text, task)` with a single `label` column). Use
-> `alta_shared_task_2026.data.from_besstie_long()` to convert it to the schema
-> above. The final submission format will be confirmed by the organisers when
-> the test data is released.
+The public Hugging Face snapshot is already in this wide format (columns
+`source`, `variety`, `text`, `sentiment`, `sarcasm`). If you encounter a
+*stacked* export (one row per `(text, task)` with a single `label` column), use
+`alta_shared_task_2026.data.from_besstie_long()` to convert it. The final
+submission format will be confirmed by the organisers when the test data is
+released.
 
 ## Getting the data
 
@@ -78,6 +123,47 @@ The expected tabular schema used by this repository:
    member details.
 2. Download the official training/development data from the task website.
 3. Place files under `data/raw/` and point the CLI at them.
+
+Optionally, load the public snapshot directly (requires the `hf` extra):
+
+```bash
+pip install 'alta-shared-task-2026[hf]'
+python -c "from alta_shared_task_2026.data import load_huggingface as l; l(config='en_AU').to_csv('data/raw/besstie-en-AU.csv', index=False)"
+```
+
+> Note: the Hub snapshot is distributed under **CC-BY-NC-4.0** — check the
+> license before any redistribution.
+
+## System pipeline
+
+```mermaid
+flowchart LR
+    A["Raw data"] --> B["validate()"]
+    B --> C["normalize_text()"]
+    C --> D["TF-IDF"]
+    D --> E["sentiment model"]
+    D --> F["sarcasm model"]
+    E --> G["evaluate_frame()"]
+    F --> G
+    G --> H["submission.csv"]
+```
+
+## Evaluation
+
+The organisers score submitted runs on the shared test set. This repository
+reports per-task **accuracy**, **precision**, **recall** and **macro-F1** —
+both overall and per variety — so you can check robustness across en-AU and
+en-UK while developing:
+
+```bash
+alta2026 evaluate --model-dir models --data data/processed/dev.csv --by-variety
+```
+
+| Metric | Why it matters for this task |
+| --- | --- |
+| **Accuracy** | Intuitive overall score; fine for balanced splits. |
+| **Macro-F1** | Robust to class imbalance; standard for shared tasks. |
+| **Per-variety F1** | Flags over-fitting to one variety (the task's core requirement). |
 
 ## Submitting results
 
@@ -92,16 +178,12 @@ The expected tabular schema used by this repository:
 3. Email your runs to the organisers before the submission deadline, and
    prepare a system description for the workshop proceedings.
 
-## Evaluation
+## Resources
 
-The organisers score submitted runs on the shared test set. This repository
-reports per-task **accuracy**, **precision**, **recall** and **macro-F1** —
-both overall and per variety — so you can check robustness across en-AU and
-en-UK while developing:
-
-```bash
-alta2026 evaluate --model-dir models --data data/processed/dev.csv --by-variety
-```
+- [ALTA website](https://www.alta.asn.au/) · [2026 Shared Task](https://www.alta.asn.au/events/sharedtask2026/) · [ALTA 2026 Workshop](https://alta2026.alta.asn.au/)
+- [BESSTIE on the Hugging Face Hub](https://huggingface.co/datasets/unswnlporg/BESSTIE)
+- [BESSTIE paper (ACL Anthology)](https://aclanthology.org/2025.findings-acl.441/) · [arXiv](https://arxiv.org/abs/2412.04726)
+- [UNSW NLP BESSTIE GitHub repository](https://github.com/unswnlp/BESSTIE)
 
 ## Citation
 

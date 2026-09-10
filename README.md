@@ -1,9 +1,6 @@
-# ALTA Shared Task 2026
-
-_Baseline and tooling for the **ALTA 2026 Shared Task**: joint **sentiment** and
-**sarcasm** classification across **Australian (en-AU)** and **British (en-UK)**
-English, using the [BESSTIE](https://huggingface.co/datasets/unswnlporg/BESSTIE)
-benchmark._
+<p align="center">
+  <img src="docs/assets/banner.png" alt="ALTA Shared Task 2026" width="100%">
+</p>
 
 <p align="center">
   <a href="https://github.com/rifat-binreza/skills-introduction-to-git/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/rifat-binreza/skills-introduction-to-git/actions/workflows/ci.yml/badge.svg"></a>
@@ -12,22 +9,80 @@ benchmark._
   <a href="https://github.com/astral-sh/ruff"><img alt="Ruff" src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json"></a>
 </p>
 
+_Baseline and tooling for the **ALTA 2026 Shared Task**: joint **sentiment** and
+**sarcasm** classification across **Australian (en-AU)** and **British (en-UK)**
+English, using the [BESSTIE](https://huggingface.co/datasets/unswnlporg/BESSTIE)
+benchmark._
+
+## Table of contents
+
+- [The task](#the-task)
+  - [At a glance](#at-a-glance)
+  - [Example annotations](#example-annotations)
+  - [Key dates](#key-dates)
+- [Quick start](#quick-start)
+- [Usage](#usage)
+- [Architecture](#architecture)
+- [Evaluation](#evaluation)
+- [Repository structure](#repository-structure)
+- [CI/CD](#cicd)
+- [Development](#development)
+- [Resources](#resources)
+- [Documentation](#documentation)
+- [Citation](#citation)
+- [License](#license)
+
 ---
 
 ## The task
 
 The seventeenth ALTA programming competition asks participants to build a system
 that, for a given piece of **Australian** or **British** English text, predicts
-two labels:
+two binary labels:
 
-| Task | Labels |
-| --- | --- |
-| **Sentiment** | `0` negative · `1` positive |
-| **Sarcasm** | `0` not sarcastic · `1` sarcastic |
+| Task | Label `0` | Label `1` |
+| --- | --- | --- |
+| **Sentiment** | negative | positive |
+| **Sarcasm** | not sarcastic | sarcastic |
 
 Systems are evaluated on the **en-AU** and **en-UK** subsets of
 [BESSTIE](https://aclanthology.org/2025.findings-acl.441/) (Srirag et al.,
 2025) and are expected to remain **robust across both English varieties**.
+
+### At a glance
+
+```mermaid
+flowchart TD
+    IN["Input text<br/>(en-AU or en-UK)"] --> MODEL[Classifier]
+    MODEL --> SENT["Sentiment<br/>0 · negative<br/>1 · positive"]
+    MODEL --> SARC["Sarcasm<br/>0 · not sarcastic<br/>1 · sarcastic"]
+```
+
+### Example annotations
+
+Real examples from BESSTIE, covering the four label combinations:
+
+| Variety | Text | Sentiment | Sarcasm |
+| --- | --- | --- | --- |
+| en-AU | "This was one of the best dishes I've EVER had! … perfectly cooked." | 1 | 0 |
+| en-AU | "Ordered the 'avocado goodness' burger and this is how much avo was on it…" | 0 | 1 |
+| en-AU | "Staff don't seem to care anymore. The manager… doesn't have service skills at all." | 0 | 0 |
+| en-UK | "Traditional friendly pub. Excellent beer" | 1 | 0 |
+| en-UK | "What a brave potatriot" | 0 | 1 |
+
+### The BESSTIE dataset
+
+| Variety | Rows (public snapshot) | Domains |
+| --- | --- | --- |
+| en-AU | 3.08k | GOOGLE, REDDIT |
+| en-IN | 3.79k | GOOGLE, REDDIT |
+| en-UK | 3.21k | GOOGLE, REDDIT |
+
+The public [Hugging Face snapshot](https://huggingface.co/datasets/unswnlporg/BESSTIE)
+provides one config per variety (`en_AU`, `en_IN`, `en_UK`) with columns
+`source`, `variety`, `text`, `sentiment` and `sarcasm`, split into `train` and
+`validation`. The 2026 shared task distributes its own official splits
+(train/dev/test) after [registration](https://www.alta.asn.au/events/sharedtask2026/).
 
 ### Key dates
 
@@ -49,6 +104,13 @@ Systems are evaluated on the **en-AU** and **en-UK** subsets of
 ---
 
 ## Quick start
+
+| Method | Best for | Command |
+| --- | --- | --- |
+| **uv** | Fast, reproducible installs | `uv sync --extra dev` |
+| **pip + venv** | Vanilla Python setups | `pip install -e ".[dev]"` |
+| **Docker** | Isolated / CI parity | `docker build -t alta-shared-task-2026 .` |
+| **Devcontainer** | One-click VS Code / Codespaces | Open repo, "Reopen in Container" |
 
 ### With `uv` (recommended)
 
@@ -103,6 +165,23 @@ alta2026 predict --model-dir models \
                  --output submission.csv
 ```
 
+A full session looks like this:
+
+```console
+$ alta2026 train --train data/processed/train.csv --model-dir models
+Development-set results:
+variety      task  accuracy  precision  recall  f1_macro
+overall sentiment       0.92       0.92    0.92       0.92
+overall   sarcasm       0.88       0.88    0.88       0.88
+  en-AU sentiment       0.93       0.93    0.93       0.93
+  en-AU   sarcasm       0.89       0.89    0.89       0.89
+  en-UK sentiment       0.91       0.91    0.91       0.91
+  en-UK   sarcasm       0.87       0.87    0.87       0.87
+
+$ alta2026 predict --model-dir models --test data/raw/test.csv --output submission.csv
+Wrote 421 predictions to submission.csv
+```
+
 The data schema is `text` plus binary `sentiment` and `sarcasm` columns, with
 optional `variety` (`en-AU`/`en-UK`) and `source` columns (CSV, TSV or Parquet).
 
@@ -112,6 +191,51 @@ The reference model is a scikit-learn pipeline: **word bigrams → TF-IDF →
 L2-regularised logistic regression**, trained independently per task. It is
 deliberately simple and reproducible so it can serve as the floor that fancier
 systems (fine-tuned LLMs, ensemble models, …) must beat.
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+    A["Raw data<br/>(CSV / TSV / Parquet)"] --> B["data.load_table()"]
+    B --> C["data.validate()<br/>schema + label checks"]
+    C --> D["preprocess.normalize_text()<br/>NFKC · lowercase · collapse"]
+    D --> E["TF-IDF vectoriser<br/>word bigrams"]
+    E --> F["Logistic regression<br/>sentiment"]
+    E --> G["Logistic regression<br/>sarcasm"]
+    F --> H["evaluate.evaluate_frame()<br/>accuracy · F1 · per-variety"]
+    G --> H
+    H --> I["write_submission()<br/>submission.csv"]
+```
+
+| Module | Responsibility |
+| --- | --- |
+| `data.py` | Loading (CSV/TSV/Parquet/Hub), schema validation, stratified splitting |
+| `preprocess.py` | Text normalisation (NFKC, lowercase, whitespace collapse) |
+| `models.py` | TF-IDF + logistic-regression baseline (fit/predict/save/load) |
+| `evaluate.py` | Accuracy / precision / recall / macro-F1, overall and per variety |
+| `submission.py` | Submission-file generation (`id`, `sentiment`, `sarcasm`) |
+| `cli.py` | The `alta2026` command-line interface |
+
+---
+
+## Evaluation
+
+The organisers score submitted runs on the shared test set. Locally, this
+repository reports per-task **accuracy**, **precision**, **recall** and
+**macro-F1** — both overall and **per variety** — so you can monitor robustness
+across en-AU and en-UK while developing:
+
+| Metric | Why it matters for this task |
+| --- | --- |
+| **Accuracy** | Intuitive overall score; fine for balanced splits. |
+| **Macro-F1** | Robust to class imbalance; standard for shared tasks. |
+| **Per-variety F1** | Flags over-fitting to one variety (the task's core requirement). |
+
+```bash
+alta2026 evaluate --model-dir models --data data/processed/dev.csv --by-variety
+```
 
 ---
 
@@ -127,6 +251,7 @@ systems (fine-tuned LLMs, ensemble models, …) must beat.
 │   ├── dependabot.yml
 │   └── pull_request_template.md
 ├── docs/
+│   ├── assets/               # Banner & image assets
 │   ├── TASK.md               # Detailed task guide
 │   ├── SETUP.md              # Setup & environment guide
 │   └── CONTRIBUTING.md       # Contribution guidelines
@@ -150,6 +275,31 @@ systems (fine-tuned LLMs, ensemble models, …) must beat.
 
 ---
 
+## CI/CD
+
+```mermaid
+flowchart TD
+    EVENT[Push / pull request] --> LINT["Lint & type-check"]
+    LINT --> RUFF["ruff check<br/>ruff format --check"]
+    LINT --> MYPY["mypy"]
+    RUFF --> TEST["Test matrix"]
+    MYPY --> TEST
+    TEST --> P310["Python 3.10"]
+    TEST --> P311["Python 3.11"]
+    TEST --> P312["Python 3.12"]
+    P310 --> BUILD["Build sdist + wheel"]
+    P311 --> BUILD
+    P312 --> BUILD
+    BUILD --> ARTIFACT["Upload dist artifact"]
+    TAG["Tag v*"] --> RELEASE["GitHub Release + assets"]
+```
+
+Every push and pull request runs: **lint** (`ruff` + `mypy`), **tests** across
+Python 3.10–3.12 with coverage, and a **build** of the sdist and wheel. Tagging
+a `v*` release attaches the built distributions to a GitHub release.
+
+---
+
 ## Development
 
 ```bash
@@ -161,14 +311,42 @@ make check         # lint + test (the CI gate)
 make build         # sdist + wheel
 ```
 
-CI runs on every push and pull request:
+---
 
-1. **Lint & type-check** — `ruff`, `ruff format --check`, `mypy`.
-2. **Test** — `pytest` with coverage across Python 3.10–3.12.
-3. **Build** — builds the sdist and wheel.
+## Resources
 
-Tagging a release (`v*`) triggers the release workflow to attach the built
-distributions to a GitHub release.
+### Official & task
+
+- [ALTA — Australasian Language Technology Association](https://www.alta.asn.au/)
+- [ALTA 2026 Shared Task](https://www.alta.asn.au/events/sharedtask2026/)
+- [ALTA 2026 Workshop](https://alta2026.alta.asn.au/) (Melbourne, 30 Nov – 2 Dec)
+- [Past shared tasks archive](https://www.alta.asn.au/events/)
+- Organiser contact: <shared.task@alta.asn.au>
+
+### Dataset & papers
+
+- [BESSTIE on the Hugging Face Hub](https://huggingface.co/datasets/unswnlporg/BESSTIE)
+- [BESSTIE paper — Findings of ACL 2025](https://aclanthology.org/2025.findings-acl.441/)
+- [BESSTIE on arXiv](https://arxiv.org/abs/2412.04726)
+- [UNSW NLP BESSTIE GitHub repository](https://github.com/unswnlp/BESSTIE)
+
+### Learning
+
+- [Hugging Face NLP Course](https://huggingface.co/learn/nlp-course)
+- [scikit-learn User Guide](https://scikit-learn.org/stable/user_guide.html)
+- [Stanford CS224N — NLP with Deep Learning](https://web.stanford.edu/class/cs224n/)
+
+### Tooling
+
+- [uv](https://docs.astral.sh/uv/) · [ruff](https://docs.astral.sh/ruff/) · [mypy](https://mypy.readthedocs.io/)
+- [pre-commit](https://pre-commit.com/) · [pytest](https://docs.pytest.org/)
+- [Docker](https://docs.docker.com/) · [Dev Containers](https://containers.dev/)
+- [GitHub Actions](https://docs.github.com/en/actions)
+
+### Related shared tasks
+
+- [SemEval](https://semeval.github.io/) · [CoNLL Shared Tasks](https://www.conll.org/)
+- [ACL Shared Tasks](https://www.aclweb.org/portal/content/acl-shared-tasks)
 
 ---
 
