@@ -51,12 +51,9 @@ Systems are evaluated on the **en-AU** and **en-UK** subsets of
 
 ### At a glance
 
-```mermaid
-flowchart TD
-    IN["Input text<br/>(en-AU or en-UK)"] --> MODEL[Classifier]
-    MODEL --> SENT["Sentiment<br/>0 · negative<br/>1 · positive"]
-    MODEL --> SARC["Sarcasm<br/>0 · not sarcastic<br/>1 · sarcastic"]
-```
+<p align="center">
+  <img src="docs/assets/diagram-task-overview.png" alt="ALTA 2026 task at a glance" width="400">
+</p>
 
 ### Example annotations
 
@@ -196,18 +193,9 @@ systems (fine-tuned LLMs, ensemble models, …) must beat.
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    A["Raw data<br/>(CSV / TSV / Parquet)"] --> B["data.load_table()"]
-    B --> C["data.validate()<br/>schema + label checks"]
-    C --> D["preprocess.normalize_text()<br/>NFKC · lowercase · collapse"]
-    D --> E["TF-IDF vectoriser<br/>word bigrams"]
-    E --> F["Logistic regression<br/>sentiment"]
-    E --> G["Logistic regression<br/>sarcasm"]
-    F --> H["evaluate.evaluate_frame()<br/>accuracy · F1 · per-variety"]
-    G --> H
-    H --> I["write_submission()<br/>submission.csv"]
-```
+<p align="center">
+  <img src="docs/assets/diagram-architecture.png" alt="System architecture" width="860">
+</p>
 
 | Module | Responsibility |
 | --- | --- |
@@ -277,22 +265,9 @@ alta2026 evaluate --model-dir models --data data/processed/dev.csv --by-variety
 
 ## CI/CD
 
-```mermaid
-flowchart TD
-    EVENT[Push / pull request] --> LINT["Lint & type-check"]
-    LINT --> RUFF["ruff check<br/>ruff format --check"]
-    LINT --> MYPY["mypy"]
-    RUFF --> TEST["Test matrix"]
-    MYPY --> TEST
-    TEST --> P310["Python 3.10"]
-    TEST --> P311["Python 3.11"]
-    TEST --> P312["Python 3.12"]
-    P310 --> BUILD["Build sdist + wheel"]
-    P311 --> BUILD
-    P312 --> BUILD
-    BUILD --> ARTIFACT["Upload dist artifact"]
-    TAG["Tag v*"] --> RELEASE["GitHub Release + assets"]
-```
+<p align="center">
+  <img src="docs/assets/diagram-cicd.png" alt="CI/CD pipeline" width="520">
+</p>
 
 Every push and pull request runs: **lint** (`ruff` + `mypy`), **tests** across
 Python 3.10–3.12 with coverage, and a **build** of the sdist and wheel. Tagging
