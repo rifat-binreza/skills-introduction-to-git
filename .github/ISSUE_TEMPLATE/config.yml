@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: ALTA 2026 Shared Task website
+    url: https://www.alta.asn.au/events/sharedtask2026/
+    about: Official task description, registration and key dates.
+  - name: Organiser contact
+    url: mailto:shared.task@alta.asn.au
+    about: Email the ALTA shared task coordinator.

@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite both this repository and the BESSTIE benchmark."
+title: "ALTA Shared Task 2026 Baseline"
+version: 0.1.0
+date-released: 2026-09-10
+authors:
+  - name: "ALTA Shared Task 2026 contributors"
+repository-code: "https://github.com/rifat-binreza/skills-introduction-to-git"
+license: MIT
+keywords:
+  - sentiment-analysis
+  - sarcasm-detection
+  - shared-task
+  - nlp
+  - besstie
+references:
+  - type: conference-paper
+    title: "BESSTIE: A Benchmark for Sentiment and Sarcasm Classification for Varieties of English"
+    authors:
+      - family-names: Srirag
+        given-names: Dipankar
+      - family-names: Joshi
+        given-names: Aditya
+      - family-names: Painter
+        given-names: Jordan
+      - family-names: Kanojia
+        given-names: Diptesh
+    year: 2025
+    venue: "Findings of the Association for Computational Linguistics: ACL 2025"
+    doi: 10.18653/v1/2025.findings-acl.441

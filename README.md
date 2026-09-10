@@ -1,347 +1,383 @@
-# Introduction to Git - ALTA Shared Task
+<p align="center">
+  <img src="docs/assets/banner.png" alt="ALTA Shared Task 2026" width="100%">
+</p>
 
-_Master Git version control while working on the ALTA Shared Task using command line (CLI) and VS Code._
+<p align="center">
+  <a href="https://github.com/rifat-binreza/skills-introduction-to-git/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/rifat-binreza/skills-introduction-to-git/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/rifat-binreza/skills-introduction-to-git/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+  <a href="https://www.python.org/downloads/"><img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-blue.svg"></a>
+  <a href="https://github.com/astral-sh/ruff"><img alt="Ruff" src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json"></a>
+</p>
 
-## 📋 Table of Contents
+_Baseline and tooling for the **ALTA 2026 Shared Task**: joint **sentiment** and
+**sarcasm** classification across **Australian (en-AU)** and **British (en-UK)**
+English, using the [BESSTIE](https://huggingface.co/datasets/unswnlporg/BESSTIE)
+benchmark._
 
-- [Welcome](#welcome)
-- [Project Overview](#project-overview)
-- [Quick Start](#quick-start)
-- [Learning Objectives](#learning-objectives)
-- [Repository Structure](#repository-structure)
-- [Getting Started](#getting-started)
-- [Project Workflow](#project-workflow)
+## Table of contents
+
+- [The task](#the-task)
+  - [At a glance](#at-a-glance)
+  - [Example annotations](#example-annotations)
+  - [Key dates](#key-dates)
+- [Quick start](#quick-start)
+- [Usage](#usage)
+- [Architecture](#architecture)
+- [Evaluation](#evaluation)
+- [Repository structure](#repository-structure)
+- [CI/CD](#cicd)
+- [Development](#development)
 - [Resources](#resources)
+- [Documentation](#documentation)
+- [Citation](#citation)
 - [License](#license)
 
-## Welcome
+---
 
-- **Who is this for**: Beginner developers who want to learn Git version control while contributing to the ALTA Shared Task
-- **What you'll learn**: Fundamental Git concepts including commits, branches, history, collaboration, and working with shared repositories
-- **What you'll build**: A Git workflow for collaborative development on the ALTA Shared Task (Brain Pool corpus)
-- **Prerequisites**:
-  - No prior Git or version control experience required
-  - Recommended: Basic familiarity with Command Line Interfaces (CLI)
-  - Recommended: Basic familiarity with Visual Studio Code
-  - Python 3.7+ for notebook execution
+## The task
 
-- **How long**: This exercise takes approximately 60-90 minutes to complete
+The seventeenth ALTA programming competition asks participants to build a system
+that, for a given piece of **Australian** or **British** English text, predicts
+two binary labels:
 
-## Project Overview
+| Task | Label `0` | Label `1` |
+| --- | --- | --- |
+| **Sentiment** | negative | positive |
+| **Sarcasm** | not sarcastic | sarcastic |
 
-This repository integrates Git fundamentals with the **ALTA Shared Task**, specifically focusing on the **Brain Pool corpus**. You'll learn version control while working with real-world computational linguistics data and code.
+Systems are evaluated on the **en-AU** and **en-UK** subsets of
+[BESSTIE](https://aclanthology.org/2025.findings-acl.441/) (Srirag et al.,
+2025) and are expected to remain **robust across both English varieties**.
 
-### What is the ALTA Shared Task?
+### At a glance
 
-The ALTA (Australasian Language Technology Association) Shared Task provides datasets and evaluation frameworks for natural language processing research. The Brain Pool corpus is one such dataset used for various NLP tasks.
-
-### Key Learning Areas
-
-1. **Git Fundamentals** - Understanding version control concepts
-2. **Collaborative Development** - Working with branches and pull requests
-3. **Project Management** - Organizing code and documentation
-4. **Jupyter Notebooks** - Working with interactive Python notebooks in Git
-5. **ALTA Tasks** - Understanding shared task workflows in NLP research
-
-## Quick Start
-
-### Prerequisites Setup
-
-```bash
-# Install Git (if not already installed)
-# macOS
-brew install git
-
-# Ubuntu/Debian
-sudo apt-get install git
-
-# Windows
-# Download from https://git-scm.com/download/win
+```mermaid
+flowchart TD
+    IN["Input text<br/>(en-AU or en-UK)"] --> MODEL[Classifier]
+    MODEL --> SENT["Sentiment<br/>0 · negative<br/>1 · positive"]
+    MODEL --> SARC["Sarcasm<br/>0 · not sarcastic<br/>1 · sarcastic"]
 ```
 
-### Clone the Repository
+### Example annotations
+
+Real examples from BESSTIE, covering the four label combinations:
+
+| Variety | Text | Sentiment | Sarcasm |
+| --- | --- | --- | --- |
+| en-AU | "This was one of the best dishes I've EVER had! … perfectly cooked." | 1 | 0 |
+| en-AU | "Ordered the 'avocado goodness' burger and this is how much avo was on it…" | 0 | 1 |
+| en-AU | "Staff don't seem to care anymore. The manager… doesn't have service skills at all." | 0 | 0 |
+| en-UK | "Traditional friendly pub. Excellent beer" | 1 | 0 |
+| en-UK | "What a brave potatriot" | 0 | 1 |
+
+### The BESSTIE dataset
+
+| Variety | Rows (public snapshot) | Domains |
+| --- | --- | --- |
+| en-AU | 3.08k | GOOGLE, REDDIT |
+| en-IN | 3.79k | GOOGLE, REDDIT |
+| en-UK | 3.21k | GOOGLE, REDDIT |
+
+The public [Hugging Face snapshot](https://huggingface.co/datasets/unswnlporg/BESSTIE)
+provides one config per variety (`en_AU`, `en_IN`, `en_UK`) with columns
+`source`, `variety`, `text`, `sentiment` and `sarcasm`, split into `train` and
+`validation`. The 2026 shared task distributes its own official splits
+(train/dev/test) after [registration](https://www.alta.asn.au/events/sharedtask2026/).
+
+### Key dates
+
+| Milestone | Date |
+| --- | --- |
+| Registration & training/dev data release | Open (28 July 2026) |
+| Test data release | 22 September 2026 |
+| Submission of runs | 28 September 2026 |
+| Notification of results | 1 October 2026 |
+| System description due | 26 October 2026 |
+| Camera-ready due | 2 November 2026 |
+| Presentation at ALTA 2026 (Melbourne) | 30 Nov – 2 Dec 2026 |
+
+- **Organisers**: coordinator Diego Mollá-Aliod (Macquarie University); data
+  Aditya Joshi & Dipankar Srirag (UNSW).
+- **Contact**: <shared.task@alta.asn.au> · **Prize**: $500 AUD.
+- **Register / full details**: <https://www.alta.asn.au/events/sharedtask2026/>
+
+---
+
+## Quick start
+
+| Method | Best for | Command |
+| --- | --- | --- |
+| **uv** | Fast, reproducible installs | `uv sync --extra dev` |
+| **pip + venv** | Vanilla Python setups | `pip install -e ".[dev]"` |
+| **Docker** | Isolated / CI parity | `docker build -t alta-shared-task-2026 .` |
+| **Devcontainer** | One-click VS Code / Codespaces | Open repo, "Reopen in Container" |
+
+### With `uv` (recommended)
 
 ```bash
 git clone https://github.com/rifat-binreza/skills-introduction-to-git.git
 cd skills-introduction-to-git
+
+uv sync --extra dev       # install the package + dev tooling in a venv
+uv run alta2026 --help    # verify the CLI
 ```
 
-### Configure Git
+### With `pip`
 
 ```bash
-git config --global user.name "Your Name"
-git config --global user.email "your.email@example.com"
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+alta2026 --help
 ```
 
-## Learning Objectives
-
-After completing this exercise, you will be able to:
-
-1. ✅ Understand what version control is and why developers use it
-2. ✅ Configure your Git identity and settings
-3. ✅ Create your first repository and make meaningful commits
-4. ✅ View project history and compare file changes
-5. ✅ Work with branches to experiment safely
-6. ✅ Understand Git collaboration concepts and workflows
-7. ✅ Work with Jupyter notebooks in a version-controlled environment
-8. ✅ Contribute to shared tasks and collaborative projects
-
-## Repository Structure
-
-```
-skills-introduction-to-git/
-├── README.md                                    # This file
-├── LICENSE                                      # MIT License
-├── .github/                                     # GitHub configuration
-│   └── workflows/                               # CI/CD workflows
-├── .devcontainer/                               # Development container setup
-├── notebooks/                                   # Jupyter notebooks
-│   ├── alta-shared-task-brain-pool.ipynb       # Main ALTA task notebook
-│   └── fork-of-alta-shared-task-brain-pool.ipynb # Alternative version
-├── src/                                         # Source code
-│   └── (utility scripts and modules)
-├── docs/                                        # Documentation
-│   ├── SETUP.md                                # Setup instructions
-│   ├── CONTRIBUTING.md                          # Contribution guidelines
-│   └── ALTA_SHARED_TASK.md                     # ALTA task guide
-├── requirements.txt                            # Project dependencies
-└── data/                                        # Data files (if applicable)
-```
-
-## Getting Started
-
-### Step 1: Environment Setup
-
-Follow the [Setup Guide](docs/SETUP.md) to install dependencies and configure your environment.
+### With Docker
 
 ```bash
-# Quick setup
-pip install -r requirements.txt
+docker build -t alta-shared-task-2026 .
+docker run --rm alta-shared-task-2026 --help
 ```
 
-### Step 2: Understanding Git Basics
+### With a devcontainer / Codespaces
+
+Open the repository in VS Code with the
+[Dev Containers](https://code.visualstudio.com/docs/devcontainers/containers)
+extension — `.devcontainer/devcontainer.json` provisions Python 3.12, ruff,
+mypy and pre-commit automatically.
+
+---
+
+## Usage
+
+The `alta2026` CLI has three subcommands.
 
 ```bash
-# Check Git version
-git --version
+# Train baselines; the dev set is held out automatically if --dev is omitted.
+alta2026 train --train data/processed/train.csv \
+               --dev data/processed/dev.csv \
+               --model-dir models
 
-# View your Git configuration
-git config --list
+# Score a labelled evaluation set (optionally broken down per variety).
+alta2026 evaluate --model-dir models --data data/processed/dev.csv --by-variety
+
+# Produce a submission file from unlabelled test data.
+alta2026 predict --model-dir models \
+                 --test data/raw/test.csv \
+                 --output submission.csv
 ```
 
-### Step 3: Clone and Explore
+A full session looks like this:
+
+```console
+$ alta2026 train --train data/processed/train.csv --model-dir models
+Development-set results:
+variety      task  accuracy  precision  recall  f1_macro
+overall sentiment       0.92       0.92    0.92       0.92
+overall   sarcasm       0.88       0.88    0.88       0.88
+  en-AU sentiment       0.93       0.93    0.93       0.93
+  en-AU   sarcasm       0.89       0.89    0.89       0.89
+  en-UK sentiment       0.91       0.91    0.91       0.91
+  en-UK   sarcasm       0.87       0.87    0.87       0.87
+
+$ alta2026 predict --model-dir models --test data/raw/test.csv --output submission.csv
+Wrote 421 predictions to submission.csv
+```
+
+The data schema is `text` plus binary `sentiment` and `sarcasm` columns, with
+optional `variety` (`en-AU`/`en-UK`) and `source` columns (CSV, TSV or Parquet).
+
+### The baseline
+
+The reference model is a scikit-learn pipeline: **word bigrams → TF-IDF →
+L2-regularised logistic regression**, trained independently per task. It is
+deliberately simple and reproducible so it can serve as the floor that fancier
+systems (fine-tuned LLMs, ensemble models, …) must beat.
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+    A["Raw data<br/>(CSV / TSV / Parquet)"] --> B["data.load_table()"]
+    B --> C["data.validate()<br/>schema + label checks"]
+    C --> D["preprocess.normalize_text()<br/>NFKC · lowercase · collapse"]
+    D --> E["TF-IDF vectoriser<br/>word bigrams"]
+    E --> F["Logistic regression<br/>sentiment"]
+    E --> G["Logistic regression<br/>sarcasm"]
+    F --> H["evaluate.evaluate_frame()<br/>accuracy · F1 · per-variety"]
+    G --> H
+    H --> I["write_submission()<br/>submission.csv"]
+```
+
+| Module | Responsibility |
+| --- | --- |
+| `data.py` | Loading (CSV/TSV/Parquet/Hub), schema validation, stratified splitting |
+| `preprocess.py` | Text normalisation (NFKC, lowercase, whitespace collapse) |
+| `models.py` | TF-IDF + logistic-regression baseline (fit/predict/save/load) |
+| `evaluate.py` | Accuracy / precision / recall / macro-F1, overall and per variety |
+| `submission.py` | Submission-file generation (`id`, `sentiment`, `sarcasm`) |
+| `cli.py` | The `alta2026` command-line interface |
+
+---
+
+## Evaluation
+
+The organisers score submitted runs on the shared test set. Locally, this
+repository reports per-task **accuracy**, **precision**, **recall** and
+**macro-F1** — both overall and **per variety** — so you can monitor robustness
+across en-AU and en-UK while developing:
+
+| Metric | Why it matters for this task |
+| --- | --- |
+| **Accuracy** | Intuitive overall score; fine for balanced splits. |
+| **Macro-F1** | Robust to class imbalance; standard for shared tasks. |
+| **Per-variety F1** | Flags over-fitting to one variety (the task's core requirement). |
 
 ```bash
-# Clone this repository
-git clone https://github.com/rifat-binreza/skills-introduction-to-git.git
-
-# Navigate to the repository
-cd skills-introduction-to-git
-
-# View commit history
-git log --oneline
-
-# Check current branch
-git branch
+alta2026 evaluate --model-dir models --data data/processed/dev.csv --by-variety
 ```
 
-### Step 4: Create Your Working Branch
+---
+
+## Repository structure
+
+```
+.
+├── .devcontainer/            # VS Code devcontainer / Codespaces config
+├── .github/
+│   ├── workflows/            # CI (lint → test matrix → build) + release
+│   ├── ISSUE_TEMPLATE/       # Bug & feature issue forms
+│   ├── CODEOWNERS
+│   ├── dependabot.yml
+│   └── pull_request_template.md
+├── docs/
+│   ├── assets/               # Banner & image assets
+│   ├── TASK.md               # Detailed task guide
+│   ├── SETUP.md              # Setup & environment guide
+│   └── CONTRIBUTING.md       # Contribution guidelines
+├── src/alta_shared_task_2026/
+│   ├── cli.py                # alta2026 command-line interface
+│   ├── data.py               # Loading, validation, splitting
+│   ├── models.py             # TF-IDF + logistic-regression baseline
+│   ├── evaluate.py           # Metrics & per-variety breakdowns
+│   ├── submission.py         # Submission-file generation
+│   ├── preprocess.py         # Text normalisation
+│   └── constants.py          # Columns, labels, defaults
+├── tests/                    # pytest suite
+├── data/                     # (git-ignored) raw/processed data
+├── pyproject.toml            # Packaging + ruff/mypy/pytest config
+├── Makefile                  # Common developer targets
+├── Dockerfile                # Multi-stage container image
+├── .pre-commit-config.yaml   # Pre-commit hooks (ruff, mypy, hygiene)
+├── CITATION.cff              # Citation metadata
+└── README.md
+```
+
+---
+
+## CI/CD
+
+### CI workflow (`.github/workflows/ci.yml`)
+
+Runs on every push and pull request:
+
+<p align="center">
+  <img src="docs/assets/workflow-ci.png" alt="CI workflow — lint to test matrix to build" width="560">
+</p>
+
+- **Lint & type-check** — `ruff check`, `ruff format --check`, `mypy`.
+- **Test** — `pytest` with coverage across **Python 3.10, 3.11 and 3.12**.
+- **Build distributions** — builds the sdist and wheel and uploads them as an artifact.
+
+### Release workflow (`.github/workflows/release.yml`)
+
+Tagging a `v*` release triggers:
+
+<p align="center">
+  <img src="docs/assets/workflow-release.png" alt="Release workflow — build and publish release" width="300">
+</p>
+
+- **Build and publish release** — builds the distributions and attaches them to a GitHub release with auto-generated release notes.
+
+---
+
+## Development
 
 ```bash
-# Create a new branch for your work
-git checkout -b feature/my-contribution
-
-# View all branches
-git branch -a
+make install-dev   # pip install -e ".[dev]"
+make lint          # ruff check + ruff format --check + mypy
+make test          # pytest
+make test-cov      # pytest with coverage
+make check         # lint + test (the CI gate)
+make build         # sdist + wheel
 ```
 
-### Step 5: Make Changes and Commit
-
-```bash
-# View changed files
-git status
-
-# Stage changes
-git add .
-
-# Commit with a meaningful message
-git commit -m "Add: Description of your changes"
-
-# View commit history
-git log --oneline
-```
-
-### Step 6: Working with the Notebooks
-
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Start Jupyter
-jupyter notebook
-
-# Open notebooks/alta-shared-task-brain-pool.ipynb
-```
-
-## Project Workflow
-
-### Standard Git Workflow
-
-1. **Create a Branch**: Start from main branch
-   ```bash
-   git checkout main
-   git pull origin main
-   git checkout -b feature/your-feature
-   ```
-
-2. **Make Changes**: Edit files, run tests, validate notebooks
-   ```bash
-   # Edit your files
-   # Run Jupyter notebook
-   # Test your changes
-   ```
-
-3. **Commit Changes**: Save your work with clear messages
-   ```bash
-   git add .
-   git commit -m "Add: Specific description of changes"
-   ```
-
-4. **Push to Remote**: Upload your branch
-   ```bash
-   git push origin feature/your-feature
-   ```
-
-5. **Create Pull Request**: Submit for review on GitHub
-   - Use meaningful PR title and description
-   - Reference relevant issues or tasks
-   - Wait for review feedback
-
-6. **Merge**: Integrate changes to main
-   ```bash
-   git checkout main
-   git pull origin main
-   git merge feature/your-feature
-   ```
-
-### Commit Message Guidelines
-
-Write clear, concise commit messages following this format:
-
-```
-<Type>: <Short description (50 chars max)>
-
-<Optional detailed explanation>
-
-Example:
-Add: Data preprocessing for ALTA brain pool corpus
-Improve: Error handling in notebook cells
-Fix: Memory leak in data processing loop
-Docs: Update installation instructions
-```
-
-## Common Git Commands
-
-| Command | Description |
-|---------|-------------|
-| `git status` | Show current changes |
-| `git add <file>` | Stage changes for commit |
-| `git commit -m "msg"` | Create a commit |
-| `git push` | Upload changes to remote |
-| `git pull` | Download changes from remote |
-| `git branch` | List/create branches |
-| `git checkout <branch>` | Switch branches |
-| `git merge <branch>` | Merge branches |
-| `git log` | View commit history |
-| `git diff` | Show changes between versions |
-
-## Documentation
-
-- **[Setup Guide](docs/SETUP.md)** - Detailed installation and environment setup
-- **[Contributing Guidelines](docs/CONTRIBUTING.md)** - How to contribute to this project
-- **[ALTA Shared Task Guide](docs/ALTA_SHARED_TASK.md)** - Information about the ALTA task and Brain Pool corpus
+---
 
 ## Resources
 
-### Git Learning Resources
-- [Official Git Documentation](https://git-scm.com/doc)
-- [GitHub Skills - Introduction to Git](https://github.com/skills/introduction-to-git)
-- [Pro Git Book](https://git-scm.com/book/en/v2)
-- [Atlassian Git Tutorials](https://www.atlassian.com/git/tutorials)
+### Official & task
 
-### ALTA Shared Task Resources
-- [ALTA Shared Tasks](https://www.altanlp.org/shared-task/)
-- [Brain Pool Corpus Documentation](https://github.com/rcds/alta-shared-task)
+- [ALTA — Australasian Language Technology Association](https://www.alta.asn.au/)
+- [ALTA 2026 Shared Task](https://www.alta.asn.au/events/sharedtask2026/)
+- [ALTA 2026 Workshop](https://alta2026.alta.asn.au/) (Melbourne, 30 Nov – 2 Dec)
+- [Past shared tasks archive](https://www.alta.asn.au/events/)
+- Organiser contact: <shared.task@alta.asn.au>
+
+### Dataset & papers
+
+- [BESSTIE on the Hugging Face Hub](https://huggingface.co/datasets/unswnlporg/BESSTIE)
+- [BESSTIE paper — Findings of ACL 2025](https://aclanthology.org/2025.findings-acl.441/)
+- [BESSTIE on arXiv](https://arxiv.org/abs/2412.04726)
+- [UNSW NLP BESSTIE GitHub repository](https://github.com/unswnlp/BESSTIE)
+
+### Learning
+
+- [Hugging Face NLP Course](https://huggingface.co/learn/nlp-course)
+- [scikit-learn User Guide](https://scikit-learn.org/stable/user_guide.html)
+- [Stanford CS224N — NLP with Deep Learning](https://web.stanford.edu/class/cs224n/)
+
+### Tooling
+
+- [uv](https://docs.astral.sh/uv/) · [ruff](https://docs.astral.sh/ruff/) · [mypy](https://mypy.readthedocs.io/)
+- [pre-commit](https://pre-commit.com/) · [pytest](https://docs.pytest.org/)
+- [Docker](https://docs.docker.com/) · [Dev Containers](https://containers.dev/)
+- [GitHub Actions](https://docs.github.com/en/actions)
+
+### Related shared tasks
+
+- [SemEval](https://semeval.github.io/) · [CoNLL Shared Tasks](https://www.conll.org/)
 - [ACL Shared Tasks](https://www.aclweb.org/portal/content/acl-shared-tasks)
 
-### Jupyter & Python Resources
-- [Jupyter Documentation](https://jupyter.org/documentation)
-- [Python Documentation](https://docs.python.org/3/)
-- [Anaconda Setup Guide](https://docs.anaconda.com/anaconda/install/)
+---
 
-## Troubleshooting
+## Documentation
 
-### Problem: "fatal: not a git repository"
-```bash
-# Solution: Initialize or clone the repository
-git init
-# or
-git clone <repository-url>
+- **[Task guide](docs/TASK.md)** — the shared task in detail, data and submission notes.
+- **[Setup](docs/SETUP.md)** — environment setup (uv, pip, Docker, devcontainer).
+- **[Contributing](docs/CONTRIBUTING.md)** — guidelines, commit conventions, workflow.
+
+## Citation
+
+If you use this code, please cite the BESSTIE benchmark (see
+[`CITATION.cff`](CITATION.cff)):
+
+```bibtex
+@inproceedings{srirag-etal-2025-besstie,
+    title = "{BESSTIE}: A Benchmark for Sentiment and Sarcasm Classification for Varieties of {E}nglish",
+    author = "Srirag, Dipankar and Joshi, Aditya and Painter, Jordan and Kanojia, Diptesh",
+    booktitle = "Findings of the Association for Computational Linguistics: ACL 2025",
+    month = jul,
+    year = "2025",
+    address = "Vienna, Austria",
+    publisher = "Association for Computational Linguistics",
+    doi = "10.18653/v1/2025.findings-acl.441",
+    pages = "8413--8429",
+}
 ```
-
-### Problem: "Your branch is behind 'origin/main'"
-```bash
-# Solution: Pull the latest changes
-git pull origin main
-```
-
-### Problem: Jupyter Notebook Not Loading
-```bash
-# Solution: Rebuild Jupyter
-jupyter notebook --generate-config
-jupyter notebook
-```
-
-## Contributing
-
-We welcome contributions! Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines on:
-- Reporting bugs
-- Submitting enhancements
-- Code review process
-- Commit message standards
-
-## Code of Conduct
-
-This project adheres to the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/code_of_conduct.md).
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## Next Steps
-
-1. **Read through** this README completely
-2. **Follow** the [Setup Guide](docs/SETUP.md)
-3. **Clone this repository** and explore the structure
-4. **Open the notebooks** and follow the exercises
-5. **Read** the [ALTA Shared Task Guide](docs/ALTA_SHARED_TASK.md)
-6. **Create your own branch** and make your first commit
-7. **Practice the workflow** with each exercise
-8. **Follow** [Contributing Guidelines](docs/CONTRIBUTING.md) for submissions
-
-## Questions or Issues?
-
-- 📝 [Create an Issue](https://github.com/rifat-binreza/skills-introduction-to-git/issues)
-- 💬 [Start a Discussion](https://github.com/rifat-binreza/skills-introduction-to-git/discussions)
-- 📚 Check the [documentation](docs/)
-
----
-
-**Happy Learning! 🚀**
-
-_Last Updated: September 2026_
-_Maintained by: [rifat-binreza](https://github.com/rifat-binreza)_
-
-&copy; 2025 GitHub &bull; [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/code_of_conduct.md) &bull; [MIT License](LICENSE)
+This project is licensed under the MIT License — see [LICENSE](LICENSE).
+The BESSTIE dataset is distributed separately under **CC-BY-NC-4.0**; please
+respect its terms and the shared task's rules.
