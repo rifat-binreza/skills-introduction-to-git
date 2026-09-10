@@ -44,9 +44,12 @@ Both sub-tasks are binary classification problems:
 | Sentiment | negative | positive |
 | Sarcasm | not sarcastic | sarcastic |
 
-<p align="center">
-  <img src="assets/diagram-task-flow.png" alt="ALTA 2026 task flow" width="480">
-</p>
+```mermaid
+flowchart LR
+    IN["Input text<br/>(en-AU or en-UK)"] --> MODEL[Classifier]
+    MODEL --> SENT["Sentiment: 0 / 1"]
+    MODEL --> SARC["Sarcasm: 0 / 1"]
+```
 
 ## The BESSTIE benchmark
 
@@ -133,9 +136,17 @@ python -c "from alta_shared_task_2026.data import load_huggingface as l; l(confi
 
 ## System pipeline
 
-<p align="center">
-  <img src="assets/diagram-pipeline.png" alt="System pipeline" width="640">
-</p>
+```mermaid
+flowchart LR
+    A["Raw data"] --> B["validate()"]
+    B --> C["normalize_text()"]
+    C --> D["TF-IDF"]
+    D --> E["sentiment model"]
+    D --> F["sarcasm model"]
+    E --> G["evaluate_frame()"]
+    F --> G
+    G --> H["submission.csv"]
+```
 
 ## Evaluation
 

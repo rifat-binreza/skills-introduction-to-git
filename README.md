@@ -51,9 +51,12 @@ Systems are evaluated on the **en-AU** and **en-UK** subsets of
 
 ### At a glance
 
-<p align="center">
-  <img src="docs/assets/diagram-task-overview.png" alt="ALTA 2026 task at a glance" width="400">
-</p>
+```mermaid
+flowchart TD
+    IN["Input text<br/>(en-AU or en-UK)"] --> MODEL[Classifier]
+    MODEL --> SENT["Sentiment<br/>0 · negative<br/>1 · positive"]
+    MODEL --> SARC["Sarcasm<br/>0 · not sarcastic<br/>1 · sarcastic"]
+```
 
 ### Example annotations
 
@@ -193,9 +196,18 @@ systems (fine-tuned LLMs, ensemble models, …) must beat.
 
 ## Architecture
 
-<p align="center">
-  <img src="docs/assets/diagram-architecture.png" alt="System architecture" width="860">
-</p>
+```mermaid
+flowchart LR
+    A["Raw data<br/>(CSV / TSV / Parquet)"] --> B["data.load_table()"]
+    B --> C["data.validate()<br/>schema + label checks"]
+    C --> D["preprocess.normalize_text()<br/>NFKC · lowercase · collapse"]
+    D --> E["TF-IDF vectoriser<br/>word bigrams"]
+    E --> F["Logistic regression<br/>sentiment"]
+    E --> G["Logistic regression<br/>sarcasm"]
+    F --> H["evaluate.evaluate_frame()<br/>accuracy · F1 · per-variety"]
+    G --> H
+    H --> I["write_submission()<br/>submission.csv"]
+```
 
 | Module | Responsibility |
 | --- | --- |
@@ -265,13 +277,27 @@ alta2026 evaluate --model-dir models --data data/processed/dev.csv --by-variety
 
 ## CI/CD
 
+### CI workflow (`.github/workflows/ci.yml`)
+
+Runs on every push and pull request:
+
 <p align="center">
-  <img src="docs/assets/diagram-cicd.png" alt="CI/CD pipeline" width="520">
+  <img src="docs/assets/workflow-ci.png" alt="CI workflow — lint to test matrix to build" width="560">
 </p>
 
-Every push and pull request runs: **lint** (`ruff` + `mypy`), **tests** across
-Python 3.10–3.12 with coverage, and a **build** of the sdist and wheel. Tagging
-a `v*` release attaches the built distributions to a GitHub release.
+- **Lint & type-check** — `ruff check`, `ruff format --check`, `mypy`.
+- **Test** — `pytest` with coverage across **Python 3.10, 3.11 and 3.12**.
+- **Build distributions** — builds the sdist and wheel and uploads them as an artifact.
+
+### Release workflow (`.github/workflows/release.yml`)
+
+Tagging a `v*` release triggers:
+
+<p align="center">
+  <img src="docs/assets/workflow-release.png" alt="Release workflow — build and publish release" width="300">
+</p>
+
+- **Build and publish release** — builds the distributions and attaches them to a GitHub release with auto-generated release notes.
 
 ---
 

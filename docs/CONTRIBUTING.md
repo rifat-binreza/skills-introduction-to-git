@@ -27,9 +27,17 @@ All participants are expected to follow our
 
 ## Contribution workflow
 
-<p align="center">
-  <img src="assets/diagram-contribution.png" alt="Contribution workflow" width="430">
-</p>
+```mermaid
+flowchart LR
+    A["Fork & clone"] --> B["Create branch"]
+    B --> C["Make changes<br/>(+ tests)"]
+    C --> D["make format"]
+    D --> E["make lint"]
+    E --> F["make test"]
+    F --> G["Push & open PR"]
+    G --> H["CI (lint → test → build)"]
+    H --> I["Review & merge"]
+```
 
 1. **Fork** the repository and clone your fork.
 2. Create a branch from `main`:
