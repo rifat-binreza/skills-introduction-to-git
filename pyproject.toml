@@ -1,0 +1,90 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "alta-shared-task-2026"
+version = "0.1.0"
+description = "Baseline and tooling for the ALTA 2026 Shared Task: sentiment and sarcasm classification across Australian and British English (BESSTIE)."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "ALTA Shared Task 2026 contributors" }]
+keywords = ["nlp", "sentiment-analysis", "sarcasm-detection", "shared-task", "alta", "besstie"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Text Processing :: Linguistic",
+]
+dependencies = [
+  "numpy>=1.26",
+  "pandas>=2.1",
+  "scikit-learn>=1.4",
+]
+
+[project.optional-dependencies]
+hf = [
+  "datasets>=2.19",
+  "huggingface-hub>=0.23",
+]
+dev = [
+  "build>=1.2",
+  "mypy>=1.10",
+  "pre-commit>=3.7",
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+  "ruff>=0.5",
+]
+
+[project.scripts]
+alta2026 = "alta_shared_task_2026.cli:main"
+
+[project.urls]
+Homepage = "https://www.alta.asn.au/events/sharedtask2026/"
+Repository = "https://github.com/rifat-binreza/skills-introduction-to-git"
+Documentation = "https://github.com/rifat-binreza/skills-introduction-to-git#readme"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/alta_shared_task_2026"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.10"
+check_untyped_defs = true
+ignore_missing_imports = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+files = ["src", "tests"]
+
+[tool.pytest.ini_options]
+addopts = "-ra -q"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["alta_shared_task_2026"]
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "if __name__ == \"__main__\":"]
+show_missing = true
